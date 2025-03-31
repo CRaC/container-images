@@ -1,5 +1,5 @@
 FROM alpine:latest AS builder
-RUN apk add build-base curl git musl-fts-dev
+RUN apk add build-base curl git musl-fts-dev util-linux
 RUN cd /tmp && git clone https://github.com/fritzw/ld-preload-open
 RUN cd /tmp/ld-preload-open \
 	&& sed -i 's/-Wall//' Makefile \
