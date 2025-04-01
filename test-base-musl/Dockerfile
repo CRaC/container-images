@@ -1,5 +1,5 @@
 FROM alpine:latest AS builder
-RUN apk add build-base curl git musl-fts-dev util-linux
+RUN apk add build-base curl git musl-fts-dev 
 RUN cd /tmp && git clone https://github.com/fritzw/ld-preload-open
 RUN cd /tmp/ld-preload-open \
 	&& sed -i 's/-Wall//' Makefile \
@@ -9,4 +9,5 @@ RUN cd /tmp/ld-preload-open \
 	&& make all
 
 FROM alpine:latest
+RUN apk add util-linux
 COPY --from=builder /tmp/ld-preload-open/path-mapping-quiet.so /opt/path-mapping-quiet.so
