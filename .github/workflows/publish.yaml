@@ -4,10 +4,10 @@ on:
   workflow_dispatch:
     inputs:
       image_tag:
-        description: 'Image tag'
+        description: 'Image tag (empty means infer from branch name or Git tag)'
         type: string
-        default: latest
-        required: true
+        default: ''
+        required: false
       push_image:
         description: 'Push image to registry'
         type: boolean
@@ -20,7 +20,17 @@ jobs:
       matrix:
         IMAGE_DIR: [ test-base, test-base-musl ]
     env:
-      PUSH_IMAGE: ${{ (github.event_name == 'push' && github.ref_name == 'main') || (github.event_name == 'workflow_dispatch' && inputs.push_image) }}
+      IMAGE_TAG: ${{
+          case(
+            github.event_name == 'push' && github.ref == 'refs/heads/main', 'latest',
+            github.event_name == 'workflow_dispatch' && inputs.image_tag != '', inputs.image_tag,
+            github.ref_name
+          )
+        }}
+      PUSH_IMAGE: ${{
+          (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+          (github.event_name == 'workflow_dispatch' && inputs.push_image)
+        }}
     steps:
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v3
@@ -46,4 +56,4 @@ jobs:
         no-cache: true
         platforms: linux/amd64,linux/arm,linux/arm64
         push: ${{ env.PUSH_IMAGE == 'true' }}
-        tags: ghcr.io/${{ env.REPO_OWNER }}/${{ matrix.IMAGE_DIR }}:${{ inputs.image_tag || 'latest' }}
+        tags: ghcr.io/${{ env.REPO_OWNER }}/${{ matrix.IMAGE_DIR }}:${{ env.IMAGE_TAG }}
